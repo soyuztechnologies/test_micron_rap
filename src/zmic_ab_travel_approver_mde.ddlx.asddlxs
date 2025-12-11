@@ -1,0 +1,100 @@
+@Metadata.layer: #CUSTOMER
+@UI.headerInfo: { 
+    title: { value: 'TravelId' },
+    description: { value : 'Description' },
+    typeName: 'Travel',
+    typeNamePlural: 'Travel Requests'
+}
+annotate entity ZMIC_AB_TRAVEL_APPROVER
+    with 
+{
+    @UI.facet: [
+        { 
+            purpose: #HEADER,
+            type: #DATAPOINT_REFERENCE,
+            id: 'header',
+            position: 10,
+            targetQualifier: 'spiderman'
+        },
+        { 
+            purpose: #HEADER,
+            type: #DATAPOINT_REFERENCE,
+            id: 'mickey',
+            position: 20,
+            targetQualifier: 'superman'
+        },
+        { 
+            purpose: #STANDARD,
+            type: #COLLECTION,
+            id: 'minion',
+            position: 10,
+            label: 'Travel Details'            
+        },
+        { 
+            purpose: #STANDARD,
+            type: #IDENTIFICATION_REFERENCE,
+            position: 10,
+            label: 'More Info',
+            parentId: 'minion'            
+        },
+        { 
+            purpose: #STANDARD,
+            type: #FIELDGROUP_REFERENCE,
+            position: 20,
+            label: 'Dates',
+            parentId: 'minion',
+            targetQualifier: 'dates'        
+        },
+        { 
+            purpose: #STANDARD,
+            type: #FIELDGROUP_REFERENCE,
+            position: 30,
+            label: 'Cost',
+            parentId: 'minion',
+            targetQualifier: 'cost'        
+        },
+        { 
+            purpose: #STANDARD,
+            type: #LINEITEM_REFERENCE,
+            position: 20,
+            label: 'Bookings',
+            targetElement: '_Booking'
+        }
+    ]
+    @UI.selectionField: [{ position: 10 }]
+    @UI.lineItem: [{ position: 10 }]
+    @UI.identification: [{ position: 10 }]
+    TravelId;
+    @UI.selectionField: [{ position: 20 }]
+    @UI.lineItem: [{ position: 20 }]
+    @UI.identification: [{ position: 20 }]
+    AgencyId;
+    @UI.selectionField: [{ position: 30 }]
+    @UI.lineItem: [{ position: 30 }]
+    @UI.identification: [{ position: 30 }]
+    CustomerId;
+    @UI.lineItem: [{ position: 40 }]
+    @UI.fieldGroup: [{ position: 10, qualifier: 'dates' }]
+    BeginDate;
+    @UI.fieldGroup: [{ position: 20, qualifier: 'dates' }]
+    EndDate;
+    @UI.fieldGroup: [{ position: 10, qualifier: 'cost' }]
+    BookingFee;
+    @UI.selectionField: [{ position: 40 }]
+    @UI.lineItem: [{ position: 50 }]
+    @UI.dataPoint: { qualifier: 'spiderman', description: 'Total Cost' }
+    @UI.fieldGroup: [{ position: 20, qualifier: 'cost' }]
+    TotalPrice;
+    @UI.fieldGroup: [{ position: 30, qualifier: 'cost' }]
+    CurrencyCode;
+    @UI.identification: [{ position: 40 }]
+    Description;
+    @UI.selectionField: [{ position: 50 }]
+    @UI.lineItem: [{ position: 60, criticality: 'IconColor' },
+    {  type: #FOR_ACTION, label: 'Approve', dataAction: 'acceptTravel' },
+    {  type: #FOR_ACTION, label: 'Reject', dataAction: 'rejectTravel' }]
+    @UI.dataPoint: { qualifier: 'superman', description: 'Status' }
+    @UI.fieldGroup: [{ position: 30, qualifier: 'dates' }]
+    OverallStatus;
+    
+}

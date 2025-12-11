@@ -1,0 +1,39 @@
+projection;
+strict ( 2 );
+use side effects;
+use draft;
+
+define behavior for ZMIC_AB_TRAVEL_PROCESSOR alias Travel
+implementation in class zcl_mic_ab_trav_proc unique
+{
+  use create (augment);
+  use update;
+  use delete;
+
+  use action activate;
+  use action prepare;
+  use action edit;
+  use action discard;
+  use action resume;
+
+  use action copyTravel;
+  use association _Booking { create; with draft; }
+}
+
+define behavior for ZMIC_AB_BOOKING_PROCESSOR alias Booking
+{
+  use update;
+  use delete;
+
+  use association _Travel;
+  use association _BookSuppl { create; with draft;  }
+}
+
+define behavior for ZMIC_AB_BOOKSUPPL_PROCESSOR alias BookSuppl
+{
+  use update;
+  use delete;
+
+  use association _Travel;
+  use association _Booking;
+}

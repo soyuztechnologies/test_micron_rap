@@ -1,0 +1,159 @@
+//indicate the type of implementation since its managed - RAP takes care of CRUD
+//also there is a class where developers can hook their code
+managed implementation in class zbp_mic_ab_travel unique;
+//this will let the framework run code in strict mode
+strict ( 2 );
+//Inform the RAP that we need Draft
+with draft;
+
+//first entity BDEF where i can tell RAP what to allow
+define behavior for ZMIC_AB_TRAVEL alias Travel
+//move code here
+implementation in class zbp_mic_ab_travel unique
+//this is the table where RAp will insert, update, delete data
+persistent table /dmo/travel_m
+//indicate DB locks on master entity ENQUE and DEQUEUE
+lock master
+//Total etag field
+total etag LastChangedAt
+//Secruity
+authorization master ( instance )
+//specify which database table the draft will be stored
+draft table zmic_ab_dtrav
+//Concurrency Control
+etag master LastChangedAt
+early numbering
+with additional save
+{
+  //hey RAP please implement the CUD for me
+  create (precheck);
+  update (precheck);
+  delete;
+  field ( readonly ) TravelId;
+  field ( mandatory ) begindate, enddate, agencyid, customerid;
+  //we want to allow user to create (new) instance of BO based on (existing instance)
+  factory action copyTravel[1];
+
+  //non factory actions which will change the state of the BO instance
+  action (features : instance) acceptTravel result[1] $self;
+  action (features : instance) rejectTravel result[1] $self;
+
+
+  //its a piece of code which is intented to be only
+  //consumed within our RAP BO
+  internal action reCalcTotalPrice;
+  //Checking custom business object rules
+  validation validateHeaderData on save {create; field CustomerId, BeginDate, EndDate;}
+
+  //declare draft related actions
+  draft determine action Prepare;
+  draft action Edit;
+  draft action Resume;
+  draft action Activate;
+  draft action Discard;
+
+  //Define determination to execute the code when
+  //booking fee or curr code changes so we calc total price
+  determination calculateTotalPrice on modify
+            { create; field BookingFee, CurrencyCode; }
+
+  //Adding side-effect which inform RAP to reaload the total price if the booking
+  //fee has been changed on the Frontend
+  side effects {
+    field BookingFee affects field TotalPrice;
+  }
+
+  association _Booking { create (features : instance); with draft;  }
+
+  mapping for /dmo/travel_m{
+    TravelId = travel_id;
+    BeginDate = begin_date;
+    EndDate = end_date;
+    Description = description;
+    TotalPrice = total_price;
+    BookingFee = booking_fee;
+    CurrencyCode = currency_code;
+    AgencyId = agency_id;
+    CustomerId = customer_id;
+    CreatedAt = created_at;
+    CreatedBy = created_by;
+    LastChangedAt = last_changed_at;
+    LastChangedBy = last_changed_by;
+  }
+
+}
+
+define behavior for ZMIC_AB_BOOKING alias Booking
+//move code here
+implementation in class zbp_mic_ab_book unique
+persistent table /dmo/booking_m
+draft table zmic_ab_dbook
+lock dependent by _Travel
+authorization dependent by _Travel
+etag master LastChangedAt
+early numbering
+{
+  update;
+  delete;
+  field ( readonly ) TravelId, BookingId;
+  field (mandatory) carrierid, connectionid, flightdate;
+  //Define determination to execute the code when
+  //booking fee or curr code changes so we calc total price
+  determination calculateTotalPrice on modify
+            { create; field FlightPrice, CurrencyCode; }
+
+  //Adding side-effect which inform RAP to reaload the total price if the booking
+  //fee has been changed on the Frontend
+  side effects {
+    field FlightPrice affects field _Travel.TotalPrice;
+  }
+
+  association _Travel;
+  association _BookSuppl { create; with draft; }
+
+  mapping for /dmo/booking_m{
+    TravelId = travel_id;
+    BookingId = booking_id;
+    BookingStatus = booking_status;
+    CarrierId = carrier_id;
+    ConnectionId = connection_id;
+    CurrencyCode = currency_code;
+    CustomerId = customer_id;
+    FlightDate = flight_date;
+    FlightPrice = flight_price;
+    LastChangedAt = last_changed_at;
+
+  }
+
+}
+
+define behavior for ZMIC_AB_BOOKSUPPL alias BookSuppl
+persistent table /dmo/booksuppl_m
+draft table zmic_ab_dbsuppl
+lock dependent by _Travel
+authorization dependent by _Travel
+etag master LastChangedAt
+early numbering
+{
+  update;
+  delete;
+  field ( readonly ) TravelId, BookingId, BookingSupplementId;
+  association _Travel;
+
+  //Adding side-effect which inform RAP to reaload the total price if the booking
+  //fee has been changed on the Frontend
+  side effects {
+    field Price affects field _Travel.TotalPrice;
+  }
+
+  association _Booking;
+  mapping for /dmo/booksuppl_m{
+    BookingId = booking_id;
+    TravelId = travel_id;
+    BookingSupplementId = booking_supplement_id;
+    SupplementId = supplement_id;
+    LastChangedAt = last_changed_at;
+    CurrencyCode = currency_code;
+    Price = price;
+  }
+}
